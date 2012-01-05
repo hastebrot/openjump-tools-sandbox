@@ -105,6 +105,28 @@ public class TestTools {
         plugin.initialize(plugInContext);
     }
     
+    /**
+     * Configure PlugIn via fields in the object. Replaces the configuration of the 
+     * plugin via an user dialog in PlugIn.execute().
+     * 
+     * @param plugin
+     * @param parameters
+     */
+    public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters)
+            throws Exception {
+        for (String key : parameters.keySet()) {
+            privateField(plugin, key, parameters.get(key));
+        }
+    }
+
+    /**
+     * Configure PlugIn via a dialog field. Replaces the configuration of the 
+     * plugin via an user dialog in PlugIn.execute().
+     * 
+     * @param plugin
+     * @param parameters
+     * @param retrieveFieldNamesFromPlugIn
+     */
     // TODO: Throw exception if plugin has no field "dialog".
     public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters, 
             boolean retrieveFieldNamesFromPlugIn) throws Exception {
@@ -131,7 +153,8 @@ public class TestTools {
             ((ThreadedPlugIn) plugin).run(taskMonitor, plugInContext);
         }
         else {
-            throw new IllegalArgumentException("Only ThreadedPlugIn is supported for now.");
+            String message = "Only ThreadedPlugIn is supported for now.";
+            throw new IllegalArgumentException(message);
         }
     }
     

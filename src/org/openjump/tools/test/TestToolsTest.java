@@ -28,6 +28,7 @@ import javax.swing.JInternalFrame;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -61,10 +62,10 @@ public class TestToolsTest {
         workbench.getFrame().setVisible(true);
     }
     
-//    @Before
-//    public void before() {
-//        workbench.getFrame().addTaskFrame();
-//    }
+    @Before
+    public void before() {
+        //workbench.getFrame().addTaskFrame();
+    }
     
     @After
     public void after() throws Exception {
@@ -82,6 +83,13 @@ public class TestToolsTest {
     //-----------------------------------------------------------------------------------
     // TEST CASES.
     //-----------------------------------------------------------------------------------
+    
+    @Test
+    public void testBuildWorkbench() {
+        // expect: "Workbench contains WorkbenchFrame and WorkbenchContext"
+        assertNotNull(workbench.getFrame());
+        assertNotNull(workbench.getContext());
+    }
     
     @Test
     public void testOpenFile() {
@@ -107,10 +115,38 @@ public class TestToolsTest {
     // TODO: test execute() and run(), with or without ThreadedPlugIn.
     
     @Test
+    public void testConfigurePlugInWithFields() throws Exception {
+        // given: "an example plugin with fields"
+        PlugIn plugin = new ExamplePlugInWithFields();
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("field", "value");
+        
+        // when: "configure plugin with fields"
+        TestTools.configurePlugIn(plugin, parameters);
+        
+        // then: "contains the field"
+        assertEquals("value", privateField(plugin, "field"));
+    }
+    
+    @Test(expected=NoSuchFieldException.class)
+    public void testConfigurePlugInWithoutFields() throws Exception {
+        // given: "an example plugin without dialog"
+        PlugIn plugin = new ExampleEmptyPlugIn();
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("field", "value");
+        
+        // when: "configure plugin without dialog"
+        TestTools.configurePlugIn(plugin, parameters);
+        
+        // then: "complain gracefully that no field for parameters exists"
+    }
+    
+    @Test
     public void testConfigurePlugInWithDialog() throws Exception {
         // given: "an example plugin with dialog"
-        PlugIn plugin = new ExampleWithDialogPlugIn();
+        PlugIn plugin = new ExamplePlugInWithDialog();
         HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("field", "value");
         
         // when: "configure plugin with dialog"
         TestTools.configurePlugIn(plugin, parameters, false);
@@ -118,12 +154,13 @@ public class TestToolsTest {
         // then: "contains the dialog with parameters"
         assertNotNull(privateField(plugin, "dialog"));
     }
-
+    
     @Test(expected=NoSuchFieldException.class)
     public void testConfigurePlugInWithoutDialog() throws Exception {
         // given: "an example plugin without dialog"
-        PlugIn plugin = new ExampleWithoutDialogPlugIn();
+        PlugIn plugin = new ExampleEmptyPlugIn();
         HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("field", "value");
         
         // when: "configure plugin without dialog"
         TestTools.configurePlugIn(plugin, parameters, false);
@@ -134,12 +171,12 @@ public class TestToolsTest {
     @Test
     public void testExecutePlugin() throws Exception {
         // given: "a threaded plugin with parameters"
-        PlugIn plugin = new ExampleThreadedPlugIn();
+        PlugIn plugin = new ExampleThreadedPlugInWithDialog();
         HashMap<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("key", "execute plugin");
         TestTools.configurePlugIn(plugin, parameters, false);
         
-        // when: "the plugin was executed"
+        // when: "the plugin is executed"
         TestTools.executePlugIn(plugin, workbench.getContext());
         
         // then: "a property was added to the blackboard"
@@ -147,19 +184,63 @@ public class TestToolsTest {
         assertEquals("execute plugin", blackboard.get("key"));
     }
     
+    @Test(expected=IllegalArgumentException.class)
+    public void testExecutePluginWithoutThreadedPlugIn() throws Exception {
+        // given: "an non-threaded plugin"
+        PlugIn plugin = new ExamplePlugInWithDialog();
+        
+        // when: "the plugin is executed"
+        TestTools.executePlugIn(plugin, workbench.getContext());
+        
+        // then: "an exception was thrown"
+    }
+    
     //-----------------------------------------------------------------------------------
     // TEST FIXTURES.
     //-----------------------------------------------------------------------------------
     
-    public class ExampleWithDialogPlugIn extends AbstractPlugIn {
+    public class ExampleEmptyPlugIn extends AbstractPlugIn {}
+    
+    public class ExamplePlugInWithFields extends AbstractPlugIn {
+        @SuppressWarnings("unused")
+        private String field = null;
+    }
+    
+    public class ExamplePlugInWithDialog extends AbstractPlugIn {
         @SuppressWarnings("unused")
         private MultiInputDialog dialog;
     }
     
-    public class ExampleWithoutDialogPlugIn extends AbstractPlugIn {}
-    
-    public class ExampleThreadedPlugIn extends AbstractPlugIn implements ThreadedPlugIn {
+    public class ExampleThreadedPlugInWithFields extends AbstractPlugIn 
+            implements ThreadedPlugIn {
         private MultiInputDialog dialog;
+        private String key = "";
+        
+        public boolean execute(PlugInContext context) throws Exception {
+            dialog = new MultiInputDialog();
+            dialog.addTextField("key", "", 10, null, "");
+            dialog.setVisible(true);
+            key = dialog.getText("key");
+            return dialog.wasOKPressed();
+        }
+        
+        public void run(TaskMonitor monitor, PlugInContext context) throws Exception {
+            String value = key;
+            context.getWorkbenchContext().getBlackboard().put("key", value);
+        }
+    }
+    
+    public class ExampleThreadedPlugInWithDialog extends AbstractPlugIn 
+            implements ThreadedPlugIn {
+        private MultiInputDialog dialog;
+        
+        public boolean execute(PlugInContext context) throws Exception {
+            dialog = new MultiInputDialog();
+            dialog.addTextField("key", "", 10, null, "");
+            dialog.setVisible(true);
+            return dialog.wasOKPressed();
+        }
+        
         public void run(TaskMonitor monitor, PlugInContext context) throws Exception {
             String value = dialog.getText("key");
             context.getWorkbenchContext().getBlackboard().put("key", value);

@@ -27,6 +27,7 @@ import javax.swing.JInternalFrame;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openjump.tools.test.TestTools;
@@ -55,10 +56,10 @@ public class UnionByAttributePlugInTest {
         workbench.getFrame().setVisible(true);
     }
     
-//    @Before
-//    public void before() {
-//        workbench.getFrame().addTaskFrame();
-//    }
+    @Before
+    public void before() {
+        //workbench.getFrame().addTaskFrame();
+    }
     
     @After
     public void after() throws Exception {
