@@ -1,22 +1,25 @@
 package org.openjump.tools.test;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import com.vividsolutions.jump.workbench.model.Layer;
 import com.vividsolutions.jump.workbench.ui.MultiInputDialog;
 
+@SuppressWarnings("serial")
 public class DialogValues extends MultiInputDialog {
     
-    private Map<String, Object> fields = new HashMap<String, Object>();
+    //-----------------------------------------------------------------------------------
+    // FIELDS.
+    //-----------------------------------------------------------------------------------
+    
+    private HashMap<String, Object> fields = new HashMap<String, Object>();
 
+    //-----------------------------------------------------------------------------------
+    // METHODS.
+    //-----------------------------------------------------------------------------------
+    
     public void putField(String fieldName, Object value) {
         fields.put(fieldName, value);
-    }
-    
-    @Override
-    public void setVisible(boolean visible) {
-        // DO NOTHING.
     }
     
     @Override
@@ -42,6 +45,11 @@ public class DialogValues extends MultiInputDialog {
     @Override
     public Layer getLayer(String fieldName) {
         return (Layer) fields.get(fieldName);
+    }
+    
+    @Override
+    public void setVisible(boolean visible) {
+        throw new UnsupportedOperationException("Shouldn't be called in execute().");
     }
 
 }

@@ -3,6 +3,7 @@ package org.openjump.tools.test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.util.HashMap;
 import javax.swing.JInternalFrame;
 
 import org.junit.After;
@@ -10,16 +11,21 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openjump.tools.plugin.UnionByAttributePlugIn;
 
-import com.vividsolutions.jump.task.DummyTaskMonitor;
 import com.vividsolutions.jump.workbench.JUMPWorkbench;
 import com.vividsolutions.jump.workbench.model.LayerManager;
 import com.vividsolutions.jump.workbench.plugin.PlugIn;
-import com.vividsolutions.jump.workbench.plugin.PlugInContext;
-import com.vividsolutions.jump.workbench.plugin.ThreadedPlugIn;
 
 public class TestToolsTest {
     
+    //-----------------------------------------------------------------------------------
+    // FIELDS.
+    //-----------------------------------------------------------------------------------
+    
     public static JUMPWorkbench workbench;
+    
+    //-----------------------------------------------------------------------------------
+    // SETUP AND CLEANUP.
+    //-----------------------------------------------------------------------------------
     
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -40,6 +46,10 @@ public class TestToolsTest {
             workbench.getFrame().removeInternalFrame(frame);
         }
     }
+    
+    //-----------------------------------------------------------------------------------
+    // TEST CASES.
+    //-----------------------------------------------------------------------------------
     
     @Test
     public void testOpenFile() {
@@ -66,34 +76,24 @@ public class TestToolsTest {
         // given: "a loaded shapefile fixture"
         TestTools.openFile(workbench.getContext(), new File("share/dissolve.shp"));
         
-        // and: "an initialized plugin"
-        PlugInContext plugInContext = workbench.getContext().createPlugInContext();
-        ThreadedPlugIn plugin = new UnionByAttributePlugIn();
+        // and: "an initialized plugin with dialog values"
+        PlugIn plugin = new UnionByAttributePlugIn();
         //plugin.initialize(plugInContext);
-        
-        // and: "dialog values"
         LayerManager layerManager = workbench.getContext().getLayerManager();
-        DialogValues dialogValues = new DialogValues();
-        dialogValues.putField(getFieldName(plugin, "LAYER"), layerManager.getLayer("dissolve"));
-        dialogValues.putField(getFieldName(plugin, "ATTRIBUTE"), "LABEL");
-        dialogValues.putField(getFieldName(plugin, "IGNORE_EMPTY"), false);
-        dialogValues.putField(getFieldName(plugin, "MERGE_LINES"), false);
-        dialogValues.putField(getFieldName(plugin, "TOTAL_NUMERIC_FIELDS"), false);
-        TestTools.setPrivateField(plugin, "dialog", dialogValues);
+        HashMap<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("LAYER", layerManager.getLayer("dissolve"));
+        parameters.put("ATTRIBUTE", "LABEL");
+        parameters.put("IGNORE_EMPTY", false);
+        parameters.put("MERGE_LINES", false);
+        parameters.put("TOTAL_NUMERIC_FIELDS", false);
+        TestTools.configurePlugIn(plugin, parameters, true);
         
         // when: "union by attribute is called"
-        // TODO: Wait until plugin has finished.
-        // TODO: Start UndoableEditReceiver (see AbstractPlugIn.toActionListener).
-        //AbstractPlugIn.toActionListener(plugIn, workbench.getContext(), new DummyTaskMonitor());
-        plugin.run(new DummyTaskMonitor(), plugInContext);
+        TestTools.executePlugIn(plugin, workbench.getContext());
         
         // then: "layer manager contains the source and result layer" 
         assertEquals(2, layerManager.getLayers().size());
         //Thread.sleep(Integer.MAX_VALUE);
-    }
-    
-    private String getFieldName(PlugIn plugin, String field) throws Exception {
-        return (String) TestTools.getPrivateStaticField(plugin.getClass(), field);
     }
     
 }
