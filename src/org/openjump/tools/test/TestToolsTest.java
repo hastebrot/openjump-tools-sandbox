@@ -106,7 +106,6 @@ public class TestToolsTest {
     // TODO: check for I18N fields.
     // TODO: test execute() and run(), with or without ThreadedPlugIn.
     
-    //@NoWorkbenchRequired
     @Test
     public void testConfigurePlugInWithDialog() throws Exception {
         // given: "an example plugin with dialog"
@@ -120,7 +119,6 @@ public class TestToolsTest {
         assertNotNull(privateField(plugin, "dialog"));
     }
 
-    //@NoWorkbenchRequired
     @Test(expected=NoSuchFieldException.class)
     public void testConfigurePlugInWithoutDialog() throws Exception {
         // given: "an example plugin without dialog"

@@ -43,6 +43,10 @@ import com.vividsolutions.jump.workbench.plugin.ThreadedPlugIn;
 import com.vividsolutions.jump.workbench.ui.SplashPanel;
 import com.vividsolutions.jump.workbench.ui.SplashWindow;
 
+/**
+ * @author Benjamin Gudehus
+ * @since 2012-01-04
+ */
 public class TestTools {
     
     //-----------------------------------------------------------------------------------
@@ -63,32 +67,28 @@ public class TestTools {
     // STATIC METHODS.
     //-----------------------------------------------------------------------------------
     
-    // TODO: (DONE) Don't show the splash window on startup.
-    // JUMPWorkbench.main()
+    /**
+     * Builds a new Workbench with WorkbenchFrame and WorkbenchContext.
+     * 
+     * @see JUMPWorkbench.main()
+     * @return JUMPWorkbench
+     */
     public static JUMPWorkbench buildWorkbench(String[] args) throws Exception {
-        TaskMonitor progressMonitor = new DummyTaskMonitor();
-        SplashPanel splashPanel = new SplashPanel(JUMPWorkbench.splashImage(), "OpenJUMP");
-//        Setup setup = new JUMPConfiguration() {
-//            public void setup(WorkbenchContext workbenchContext) throws Exception {
-//                //super.configureStyles(workbenchContext);
-//                super.configureDatastores(workbenchContext);
-//                PlugInRunner.callPrivateSuperclassMethodWithoutArgs(this, "initializeRenderingManager");
-//                PlugInContext plugInContext = new PlugInContext(workbenchContext, null, null,
-//                    null, null);
-//                new FirstTaskFramePlugIn().initialize(plugInContext);
-//                new UnionByAttributePlugIn().initialize(plugInContext);
-//                //OpenJumpConfiguration.loadOpenJumpPlugIns(workbenchContext);
-//            }
-//        };
-        Setup setup = new JUMPConfiguration();
-        privateStaticField(JUMPWorkbench.class, "commandLine", new CommandLine());
-        //JUMPWorkbench.main(args, "OpenJUMP", setup, splashPanel, progressMonitor);
-        
+        // Configure a SplashPanel.
+        // TODO: (DONE) Don't show the splash window on startup.
+        String title = "OpenJUMP";
+        SplashPanel splashPanel = new SplashPanel(JUMPWorkbench.splashImage(), title);
         SplashWindow splashWindow = new SplashWindow(splashPanel);
         //splashWindow.setVisible(true);
         
-        JUMPWorkbench workbench = new JUMPWorkbench("OpenJUMP", args, splashWindow, 
-                progressMonitor);
+        // Create a new Workbench with WorkbenchFrame and WorkbenchContext.
+        privateStaticField(JUMPWorkbench.class, "commandLine", new CommandLine());
+        TaskMonitor monitor = new DummyTaskMonitor();
+        Setup setup = new JUMPConfiguration();
+        //JUMPWorkbench.main(args, title, setup, splashPanel, monitor);
+        JUMPWorkbench workbench = new JUMPWorkbench(title, args, splashWindow, monitor);
+        
+        // Setup Workbench.
         setup.setup(workbench.getContext());
         OpenJumpConfiguration.postExtensionInitialization(workbench.getContext());
         return workbench;
@@ -108,16 +108,16 @@ public class TestTools {
     // TODO: Throw exception if plugin has no field "dialog".
     public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters, 
             boolean retrieveFieldNamesFromPlugIn) throws Exception {
-        DialogValues dialogValues = new DialogValues();
+        DialogParameters dialogParameters = new DialogParameters();
         for (String key : parameters.keySet()) {
             Object fieldValue = parameters.get(key);
             String fieldName = key;
             if (retrieveFieldNamesFromPlugIn) {
                 fieldName = (String) privateStaticField(plugin.getClass(), fieldName);
             }
-            dialogValues.putField(fieldName, fieldValue);
+            dialogParameters.putField(fieldName, fieldValue);
         }
-        privateField(plugin, "dialog", dialogValues);
+        privateField(plugin, "dialog", dialogParameters);
     }
     
     // TODO: Wait until plugin has finished.
