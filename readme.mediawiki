@@ -1,0 +1,42 @@
+== Helper methods to test plugins (TestTools) ==
+
+* '''buildWorkbench():''' Create and setup a JUMPWorkbench with WorkbenchFrame and WorkbenchContext. The method JUMPWorkbench.main() has all needed instructions. In order to run the plugins we need to set WorkbenchFrame visible. This is only required because WorkbenchFrame.position() wants to relocate internal frames, but shouldn't be a requirement. However to show the WorkbenchFrame could be helpful when developing test cases.
+* '''configurePlugIn(plugin, parameters):''' empty
+* '''executePlugIn(plugin, context):''' Initialize and call (execute and/or run) PlugIns. The method AbstractPlugIn.toActionListener() has all needed instructions. We need to wait until the plugin finished until assertions can be made. We should test plugins with different dialog values handled to the plugin and all private methods directly.
+* '''openFile(file, context):''' empty
+
+== Layout of a test class (TestToolsTest) ==
+
+* '''@BeforeClass:''' Create a WorkbenchFrame (and optionally set it visible).
+** '''@Before:''' Create a new TaskFrame.
+** '''@Test:''' Run a single test case.
+*** Load a Shapefile.
+*** Call the PlugIn with parameters.
+*** Make assertions on the result.
+** '''@After:''' Close all internal frames (projects).
+* '''@AfterClass:''' Close the WorkbenchFrame.
+
+== Structure of a PlugIn (UnionByAttributePlugIn) ==
+
+* '''Install Plugin'''
+** Constructor: Empty (Setup).
+** Public method "initialize()": To add menu entries (FeatureInstaller)
+* '''Configure Plugin'''
+** Private static fields: With translation strings (I18N).
+** Private field "dialog": With a dialog object which is a key store (MultiInputDialog).
+** Public method "execute()": To initialize and show the dialog to the user.
+** Private method "initDialog()": To create and initialize the field for the dialog.
+* '''Execute Plugin'''
+** Public method "run()": To read the dialog object and run the tool asynchronously.
+** Private method: To create a new result layer (LayerManager).
+** Private method: To add a report (OutputWindow).
+
+== Guideline to refactor existing legacy plugins ==
+
+# Create an empty Java.project for experiments
+# Copy jar dependecies to lib
+# Copy single PlugIn source to src (downside: out of main repository version control)
+# Try to run plugin
+# Refactor PlugIn to execute simple Test with a shapefile fixture (chance no behaviour)
+# Write Tests for Normal cases and edge cases (suggested in which article)
+# Refactor mercilessly

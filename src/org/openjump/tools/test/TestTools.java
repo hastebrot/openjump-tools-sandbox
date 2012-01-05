@@ -1,10 +1,30 @@
+/*
+ * The Unified Mapping Platform (JUMP) is an extensible, interactive GUI for 
+ * visualizing and manipulating spatial features with geometry and attributes.
+ * Copyright (C) 2011  The JUMP/OpenJUMP contributors
+ * 
+ * This program is free software: you can redistribute it and/or modify it 
+ * under the terms of the GNU General Public License as published by the Free 
+ * Software Foundation, either version 2 of the License, or (at your option) 
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for 
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along 
+ * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.openjump.tools.test;
+
+import static org.openjump.tools.test.ReflectionUtils.privateField;
+import static org.openjump.tools.test.ReflectionUtils.privateStaticField;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.openjump.OpenJumpConfiguration;
@@ -23,7 +43,7 @@ import com.vividsolutions.jump.workbench.plugin.ThreadedPlugIn;
 import com.vividsolutions.jump.workbench.ui.SplashPanel;
 import com.vividsolutions.jump.workbench.ui.SplashWindow;
 
-class TestTools {
+public class TestTools {
     
     //-----------------------------------------------------------------------------------
     // MAIN METHOD.
@@ -33,7 +53,7 @@ class TestTools {
         final JUMPWorkbench workbench = TestTools.buildWorkbench(args);
         workbench.getFrame().addWindowListener(new WindowAdapter() {
             public void windowOpened(WindowEvent event) {
-                TestTools.openFile(workbench.getContext(), new File("share/dissolve.shp"));
+                TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
             }
         });
         workbench.getFrame().setVisible(true);
@@ -43,8 +63,9 @@ class TestTools {
     // STATIC METHODS.
     //-----------------------------------------------------------------------------------
     
-    // TODO: Don't show the splash window on startup.
-    static JUMPWorkbench buildWorkbench(String[] args) throws Exception {
+    // TODO: (DONE) Don't show the splash window on startup.
+    // JUMPWorkbench.main()
+    public static JUMPWorkbench buildWorkbench(String[] args) throws Exception {
         TaskMonitor progressMonitor = new DummyTaskMonitor();
         SplashPanel splashPanel = new SplashPanel(JUMPWorkbench.splashImage(), "OpenJUMP");
 //        Setup setup = new JUMPConfiguration() {
@@ -60,11 +81,11 @@ class TestTools {
 //            }
 //        };
         Setup setup = new JUMPConfiguration();
-        TestTools.setPrivateStaticField(JUMPWorkbench.class, "commandLine", new CommandLine());
+        privateStaticField(JUMPWorkbench.class, "commandLine", new CommandLine());
         //JUMPWorkbench.main(args, "OpenJUMP", setup, splashPanel, progressMonitor);
         
         SplashWindow splashWindow = new SplashWindow(splashPanel);
-        splashWindow.setVisible(true);
+        //splashWindow.setVisible(true);
         
         JUMPWorkbench workbench = new JUMPWorkbench("OpenJUMP", args, splashWindow, 
                 progressMonitor);
@@ -73,25 +94,36 @@ class TestTools {
         return workbench;
     }
     
+    public static void openFile(File file, WorkbenchContext context) {
+        OpenFilePlugIn filePlugin = new OpenFilePlugIn(context, file);
+        filePlugin.actionPerformed(new ActionEvent(filePlugin, 0, ""));
+    }
+    
+    public static void installPlugIn(PlugIn plugin, WorkbenchContext context) 
+            throws Exception {
+        PlugInContext plugInContext = context.createPlugInContext();
+        plugin.initialize(plugInContext);
+    }
+    
     // TODO: Throw exception if plugin has no field "dialog".
-    static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters, 
+    public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters, 
             boolean retrieveFieldNamesFromPlugIn) throws Exception {
         DialogValues dialogValues = new DialogValues();
         for (String key : parameters.keySet()) {
             Object fieldValue = parameters.get(key);
             String fieldName = key;
             if (retrieveFieldNamesFromPlugIn) {
-                fieldName = (String) TestTools.getPrivateStaticField(
-                        plugin.getClass(), fieldName);
+                fieldName = (String) privateStaticField(plugin.getClass(), fieldName);
             }
             dialogValues.putField(fieldName, fieldValue);
         }
-        TestTools.setPrivateField(plugin, "dialog", dialogValues);
+        privateField(plugin, "dialog", dialogValues);
     }
     
     // TODO: Wait until plugin has finished.
     // TODO: Start UndoableEditReceiver (see AbstractPlugIn.toActionListener).
-    static void executePlugIn(PlugIn plugin, WorkbenchContext context) throws Exception {
+    public static void executePlugIn(PlugIn plugin, WorkbenchContext context) 
+            throws Exception {
         TaskMonitor taskMonitor = new DummyTaskMonitor();
         PlugInContext plugInContext = context.createPlugInContext();
         //AbstractPlugIn.toActionListener(plugIn, context, taskMonitor);
@@ -99,41 +131,8 @@ class TestTools {
             ((ThreadedPlugIn) plugin).run(taskMonitor, plugInContext);
         }
         else {
-            throw new IllegalArgumentException("ThreadedPlugIn is only supported for now.");
+            throw new IllegalArgumentException("Only ThreadedPlugIn is supported for now.");
         }
     }
-    
-    public static void openFile(WorkbenchContext context, File file) {
-        OpenFilePlugIn filePlugin = new OpenFilePlugIn(context, file);
-        filePlugin.actionPerformed(new ActionEvent(filePlugin, 0, ""));
-    }
-    
-    //-----------------------------------------------------------------------------------
-    // PRIVATE STATIC METHODS.
-    //-----------------------------------------------------------------------------------
-    
-    private static void setPrivateField(Object obj, String name, Object value) throws Exception {
-        Field field = obj.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        field.set(obj, value);
-    }
-    
-    private static Object getPrivateStaticField(Class<?> cls, String name) throws Exception {
-        Field field = cls.getDeclaredField(name);
-        field.setAccessible(true);
-        return field.get(cls);
-    }
-    
-    private static void setPrivateStaticField(Class<?> cls, String name, Object value) throws Exception {
-        Field field = cls.getDeclaredField(name);
-        field.setAccessible(true);
-        field.set(cls, value);
-    }
-    
-//    private static void callPrivateSuperclassMethodWithoutArgs(Object obj, String name) throws Exception {
-//        Method method = obj.getClass().getSuperclass().getDeclaredMethod(name);
-//        method.setAccessible(true);
-//        method.invoke(obj);
-//    }
     
 }

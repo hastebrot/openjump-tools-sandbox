@@ -16,29 +16,26 @@
  * You should have received a copy of the GNU General Public License along 
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openjump.tools.test;
+package org.openjump.tools.plugin;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.openjump.tools.test.ReflectionUtils.privateField;
 
 import java.io.File;
 import java.util.HashMap;
+
 import javax.swing.JInternalFrame;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openjump.tools.plugin.UnionByAttributePlugIn;
+import org.openjump.tools.test.TestTools;
 
 import com.vividsolutions.jump.workbench.JUMPWorkbench;
 import com.vividsolutions.jump.workbench.model.LayerManager;
-import com.vividsolutions.jump.workbench.plugin.AbstractPlugIn;
 import com.vividsolutions.jump.workbench.plugin.PlugIn;
-import com.vividsolutions.jump.workbench.ui.MultiInputDialog;
 
-public class TestToolsTest {
+public class UnionByAttributePlugInTest {
     
     //-----------------------------------------------------------------------------------
     // FIELDS.
@@ -79,63 +76,13 @@ public class TestToolsTest {
     //-----------------------------------------------------------------------------------
     // TEST CASES.
     //-----------------------------------------------------------------------------------
-    
-    // TODO: check for I18N fields.
-    // TODO: test execute() and run(), with or without ThreadedPlugIn.
-    
-    //@NoWorkbenchRequired
-    @Test
-    public void testConfigurePlugInWithDialog() throws Exception {
-        // given: "an example plugin with dialog"
-        PlugIn plugin = new ExampleWithDialogPlugIn();
-        HashMap<String, Object> parameters = new HashMap<String, Object>();
-        
-        // when: "configure plugin with dialog"
-        TestTools.configurePlugIn(plugin, parameters, false);
-        
-        // then: "contains the dialog with parameters"
-        assertNotNull(privateField(plugin, "dialog"));
-    }
 
-    //@NoWorkbenchRequired
-    @Test(expected=NoSuchFieldException.class)
-    public void testConfigurePlugInWithoutDialog() throws Exception {
-        // given: "an example plugin without dialog"
-        PlugIn plugin = new ExampleWithoutDialogPlugIn();
-        HashMap<String, Object> parameters = new HashMap<String, Object>();
-        
-        // when: "configure plugin without dialog"
-        TestTools.configurePlugIn(plugin, parameters, false);
-        
-        // then: "complain gracefully that no field for parameters exists"
-    }
-    
     @Test
-    public void testOpenFile() {
-        // when: "a shapefile is opened"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
-        
-        // then: "layer manager contains one layer"
-        LayerManager layerManager = workbench.getContext().getLayerManager();
-        assertEquals(1, layerManager.getLayers().size());
-    }
-    
-    @Test
-    public void testOpenFile2nd() {
-        // when: "a shapefile is opened a second time"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
-        
-        // then: "layer manager contains one layer"
-        LayerManager layerManager = workbench.getContext().getLayerManager();
-        assertEquals(1, layerManager.getLayers().size());
-    }
-    
-    @Test
-    public void testExamplePlugin() throws Exception {
+    public void testAddedResultLayer() throws Exception {
         // given: "a loaded shapefile fixture"
         TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
         
-        // and: "an initialized plugin with dialog values"
+        // and: "plugin with dialog values"
         PlugIn plugin = new UnionByAttributePlugIn();
         LayerManager layerManager = workbench.getContext().getLayerManager();
         HashMap<String, Object> parameters = new HashMap<String, Object>();
@@ -153,16 +100,5 @@ public class TestToolsTest {
         assertEquals(2, layerManager.getLayers().size());
         //Thread.sleep(Integer.MAX_VALUE);
     }
-    
-    //-----------------------------------------------------------------------------------
-    // TEST FIXTURES.
-    //-----------------------------------------------------------------------------------
-    
-    public class ExampleWithDialogPlugIn extends AbstractPlugIn {
-        @SuppressWarnings("unused")
-        private MultiInputDialog dialog;
-    }
-    
-    public class ExampleWithoutDialogPlugIn extends AbstractPlugIn {}
     
 }
