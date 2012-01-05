@@ -30,12 +30,15 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openjump.tools.plugin.UnionByAttributePlugIn;
 
+import com.vividsolutions.jump.task.TaskMonitor;
+import com.vividsolutions.jump.util.Blackboard;
 import com.vividsolutions.jump.workbench.JUMPWorkbench;
 import com.vividsolutions.jump.workbench.model.LayerManager;
 import com.vividsolutions.jump.workbench.plugin.AbstractPlugIn;
 import com.vividsolutions.jump.workbench.plugin.PlugIn;
+import com.vividsolutions.jump.workbench.plugin.PlugInContext;
+import com.vividsolutions.jump.workbench.plugin.ThreadedPlugIn;
 import com.vividsolutions.jump.workbench.ui.MultiInputDialog;
 
 public class TestToolsTest {
@@ -80,6 +83,26 @@ public class TestToolsTest {
     // TEST CASES.
     //-----------------------------------------------------------------------------------
     
+    @Test
+    public void testOpenFile() {
+        // when: "a shapefile is opened"
+        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
+        
+        // then: "layer manager contains one layer"
+        LayerManager layerManager = workbench.getContext().getLayerManager();
+        assertEquals(1, layerManager.getLayers().size());
+    }
+    
+    @Test
+    public void testOpenFileAgain() {
+        // when: "a shapefile is opened again"
+        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
+        
+        // then: "layer manager contains one layer"
+        LayerManager layerManager = workbench.getContext().getLayerManager();
+        assertEquals(1, layerManager.getLayers().size());
+    }
+    
     // TODO: check for I18N fields.
     // TODO: test execute() and run(), with or without ThreadedPlugIn.
     
@@ -111,47 +134,19 @@ public class TestToolsTest {
     }
     
     @Test
-    public void testOpenFile() {
-        // when: "a shapefile is opened"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
-        
-        // then: "layer manager contains one layer"
-        LayerManager layerManager = workbench.getContext().getLayerManager();
-        assertEquals(1, layerManager.getLayers().size());
-    }
-    
-    @Test
-    public void testOpenFile2nd() {
-        // when: "a shapefile is opened a second time"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
-        
-        // then: "layer manager contains one layer"
-        LayerManager layerManager = workbench.getContext().getLayerManager();
-        assertEquals(1, layerManager.getLayers().size());
-    }
-    
-    @Test
-    public void testExamplePlugin() throws Exception {
-        // given: "a loaded shapefile fixture"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
-        
-        // and: "an initialized plugin with dialog values"
-        PlugIn plugin = new UnionByAttributePlugIn();
-        LayerManager layerManager = workbench.getContext().getLayerManager();
+    public void testExecutePlugin() throws Exception {
+        // given: "a threaded plugin with parameters"
+        PlugIn plugin = new ExampleThreadedPlugIn();
         HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("LAYER", layerManager.getLayer("dissolve"));
-        parameters.put("ATTRIBUTE", "LABEL");
-        parameters.put("IGNORE_EMPTY", false);
-        parameters.put("MERGE_LINES", false);
-        parameters.put("TOTAL_NUMERIC_FIELDS", false);
-        TestTools.configurePlugIn(plugin, parameters, true);
+        parameters.put("key", "execute plugin");
+        TestTools.configurePlugIn(plugin, parameters, false);
         
-        // when: "union by attribute is called"
+        // when: "the plugin was executed"
         TestTools.executePlugIn(plugin, workbench.getContext());
         
-        // then: "layer manager contains the source and result layer" 
-        assertEquals(2, layerManager.getLayers().size());
-        //Thread.sleep(Integer.MAX_VALUE);
+        // then: "a property was added to the blackboard"
+        Blackboard blackboard = workbench.getContext().getBlackboard();
+        assertEquals("execute plugin", blackboard.get("key"));
     }
     
     //-----------------------------------------------------------------------------------
@@ -164,5 +159,13 @@ public class TestToolsTest {
     }
     
     public class ExampleWithoutDialogPlugIn extends AbstractPlugIn {}
+    
+    public class ExampleThreadedPlugIn extends AbstractPlugIn implements ThreadedPlugIn {
+        private MultiInputDialog dialog;
+        public void run(TaskMonitor monitor, PlugInContext context) throws Exception {
+            String value = dialog.getText("key");
+            context.getWorkbenchContext().getBlackboard().put("key", value);
+        }
+    }
     
 }

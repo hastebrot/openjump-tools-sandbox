@@ -21,5 +21,6 @@ package org.openjump.tools.test;
 class DialogValuesTest {
 
     // TODO: Test that methods gracefully complain about invalid calls.
+    // TODO: Test nonexistent hash keys.
     
 }
