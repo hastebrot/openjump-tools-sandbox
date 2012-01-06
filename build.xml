@@ -1,0 +1,155 @@
+<?xml version="1.0" ?>
+<project name="openjump-tools" default="main" basedir=".">
+    <!-- ======================================================================= -->
+    <!-- PROPERTIES.                                                             -->
+    <!-- ======================================================================= -->
+    
+    <property environment="env" />
+    <property name="jdk.home" location="${env.JAVA_HOME}" />
+    
+    <property name="project.name" value="${ant.project.name}" />
+    <property name="project.version" value="1.4.2-SNAPSHOT" />
+    <tstamp>
+        <format property="project.timestamp" pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+    
+    <!-- ======================================================================= -->
+    <!-- PATH PROPERTIES.                                                        -->
+    <!-- ======================================================================= -->
+    
+    <property name="path.lib" location="${basedir}/lib" />
+    <property name="path.src.main" location="${basedir}/src" />
+    <property name="path.build" location="${basedir}/build" />
+    <property name="path.build.main" location="${basedir}/build/main" />
+    <property name="path.build.javadoc" location="${basedir}/build/javadoc" />
+	<property name="path.build.testdoc" location="${basedir}/build/testdoc" />
+	<property name="path.build.checkstyle" location="${basedir}/build/checkstyle" />
+    
+    <!-- ======================================================================= -->
+    <!-- CLASSPATHS.                                                             -->
+    <!-- ======================================================================= -->
+    
+    <path id="classpath.build.main">
+        <fileset dir="${path.lib}">
+            <include name="openjump-core-1.4.2-SNAPSHOT.jar" />
+        	<include name="junit-4.10.jar" />
+        </fileset>
+    </path>
+	
+    <path id="classpath.build.test">
+        <path refid="classpath.build.main" />
+    	<pathelement location="${path.build.main}" />
+    </path>
+	
+    <!-- ======================================================================= -->
+    <!-- TASK DEFINITIONS.                                                       -->
+    <!-- ======================================================================= -->
+	
+	<taskdef name="checkstyle" 
+		classname="com.puppycrawl.tools.checkstyle.CheckStyleTask"
+		classpath="${path.lib}/checkstyle-5.5-all.jar" />
+    
+    <!-- ======================================================================= -->
+    <!-- COMPILE TARGETS.                                                        -->
+    <!-- ======================================================================= -->
+    
+    <target name="compile-main">
+        <delete dir="${path.build.main}"/>
+        <mkdir dir="${path.build.main}"/>
+        <javac srcdir="${path.src.main}" 
+        	destdir="${path.build.main}"
+            classpathref="classpath.build.main" />
+    </target>
+	
+    <target name="compile-test" depends="compile-main">
+    </target>
+	
+    <target name="compile-javadoc">
+        <delete dir="${path.build.javadoc}" />
+        <mkdir dir="${path.build.javadoc}" />
+        <javadoc destdir="${path.build.javadoc}"
+                sourcepath="${path.src.main}"
+                classpathref="classpath.build.main"
+                packagenames="**.*"
+                author="true"
+                version="true"
+                use="true"
+                private="true">
+            <link href="http://download.oracle.com/javase/6/docs/api"/>
+            <link href="http://jump-pilot.sourceforge.net/javadoc/openjump_javadoc/"/>
+            <link href="http://tsusiatsoftware.net/jts/javadoc/"/>
+        </javadoc>
+    </target>
+	
+    <!-- ======================================================================= -->
+    <!-- RUN TARGETS.                                                            -->
+    <!-- ======================================================================= -->
+    
+    <target name="run-test" depends="compile-test">
+        <delete dir="${path.build.testdoc}" failonerror="false" />
+        <mkdir dir="${path.build.testdoc}" />
+    	<mkdir dir="${path.build.testdoc}/result" />
+    	<mkdir dir="${path.build.testdoc}/report" />
+        <junit printsummary="yes" 
+        	   haltonerror="no" 
+        	   haltonfailure="no" 
+        	   fork="yes"
+        	   maxmemory="256m">
+            <classpath refid="classpath.build.test" />
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="${path.build.testdoc}/result">
+                <fileset dir="${path.build.main}" includes="**/*Test.class" />
+                <fileset dir="${path.build.main}" includes="**/*Spec.class" />
+            </batchtest>
+        </junit>
+        <junitreport todir="${path.build.testdoc}/result">
+            <fileset dir="${path.build.testdoc}/result">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${path.build.testdoc}/report">
+                <param name="TITLE" expression="Unit Test Results" />
+            </report>
+        </junitreport>
+    </target>
+	
+	<target name="run-checkstyle">
+        <delete dir="${path.build.checkstyle}" failonerror="false" />
+        <mkdir dir="${path.build.checkstyle}" />
+		<checkstyle config="dist/checkstyle.xml" failOnViolation="false">
+		    <fileset dir="${path.src.main}" includes="**/*.java" />
+	        <formatter type="xml" toFile="${path.build.checkstyle}/result.xml" />
+	    </checkstyle>
+		<xslt in="${path.build.checkstyle}/result.xml" 
+			  out="${path.build.checkstyle}/report/report.html" 
+			  style="dist/checkstyle-noframes.xsl">
+		</xslt>
+	</target>
+	
+    <!-- ======================================================================= -->
+    <!-- PACKAGING TARGETS.                                                      -->
+    <!-- ======================================================================= -->
+
+    <target name="jar-javadoc" depends="compile-javadoc">
+        <jar destfile="${path.build}/${project.name}-${project.version}-javadoc.jar" 
+              basedir="${path.build.javadoc}">
+        </jar>
+    </target>
+	
+    <target name="jar-testdoc" depends="run-test">
+        <jar destfile="${path.build}/${project.name}-${project.version}-testdoc.jar" 
+              basedir="${path.build.testdoc}/result">
+        </jar>
+    </target>
+	
+    <target name="jar-checkstyle" depends="run-checkstyle">
+        <jar destfile="${path.build}/${project.name}-${project.version}-checkstyle.jar" 
+              basedir="${path.build.checkstyle}/report">
+        </jar>
+    </target>
+    
+    <!-- ======================================================================= -->
+    <!-- HELPER TARGETS.                                                         -->
+    <!-- ======================================================================= -->
+    
+    <target name="main" depends="jar-javadoc, jar-testdoc, jar-checkstyle" />
+</project>
