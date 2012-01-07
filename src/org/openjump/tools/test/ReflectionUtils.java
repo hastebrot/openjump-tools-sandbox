@@ -20,7 +20,18 @@ package org.openjump.tools.test;
 
 import java.lang.reflect.Field;
 
-public class ReflectionUtils {
+/**
+ * @author Benjamin Gudehus
+ */
+public final class ReflectionUtils {
+    
+    //-----------------------------------------------------------------------------------
+    // CONSTRUCTORS.
+    //-----------------------------------------------------------------------------------
+    
+    private ReflectionUtils() {
+        throw new UnsupportedOperationException();
+    }
     
     //-----------------------------------------------------------------------------------
     // STATIC METHODS.

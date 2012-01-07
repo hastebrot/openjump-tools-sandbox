@@ -24,6 +24,9 @@ import static org.openjump.tools.test.ReflectionUtils.privateStaticField;
 
 import org.junit.Test;
 
+/**
+ * @author Benjamin Gudehus
+ */
 public class ReflectionUtilsTest {
 
     //-----------------------------------------------------------------------------------
@@ -61,7 +64,7 @@ public class ReflectionUtilsTest {
     
     @Test(expected=NoSuchFieldException.class)
     public void testGetPrivateStaticFieldException() throws Exception {
-     // expect: "private static field"
+        // expect: "private static field"
         Class<PrivateClass> cls = PrivateClass.class;
         privateStaticField(cls, "invalid");
     }
@@ -78,7 +81,7 @@ public class ReflectionUtilsTest {
     // TEST FIXTURES.
     //-----------------------------------------------------------------------------------
     
-    static public class PrivateClass {
+    public static class PrivateClass {
         @SuppressWarnings("unused")
         private String privateField = "foo";
         

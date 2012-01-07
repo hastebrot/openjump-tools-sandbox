@@ -24,6 +24,9 @@ import org.junit.Test;
 
 import com.vividsolutions.jump.workbench.model.Layer;
 
+/**
+ * @author Benjamin Gudehus
+ */
 public class DialogParametersTest {
 
     // TODO: Test that methods gracefully complain about invalid calls.

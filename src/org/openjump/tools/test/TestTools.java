@@ -45,22 +45,15 @@ import com.vividsolutions.jump.workbench.ui.SplashWindow;
 
 /**
  * @author Benjamin Gudehus
- * @since 2012-01-04
  */
-public class TestTools {
+public final class TestTools {
     
     //-----------------------------------------------------------------------------------
-    // MAIN METHOD.
+    // CONSTRUCTORS.
     //-----------------------------------------------------------------------------------
     
-    public static void main(String[] args) throws Exception {
-        final JUMPWorkbench workbench = TestTools.buildWorkbench(args);
-        workbench.getFrame().addWindowListener(new WindowAdapter() {
-            public void windowOpened(WindowEvent event) {
-                TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
-            }
-        });
-        workbench.getFrame().setVisible(true);
+    private TestTools() {
+        throw new UnsupportedOperationException();
     }
     
     //-----------------------------------------------------------------------------------
@@ -70,21 +63,21 @@ public class TestTools {
     /**
      * Builds a new Workbench with WorkbenchFrame and WorkbenchContext.
      * 
-     * @see JUMPWorkbench.main()
+     * @see JUMPWorkbench#main
      * @return JUMPWorkbench
      */
     public static JUMPWorkbench buildWorkbench(String[] args) throws Exception {
         // Configure a SplashPanel.
-        // TODO: (DONE) Don't show the splash window on startup.
+        // TODO: (DONE) Do not show the splash window on startup.
         String title = "OpenJUMP";
         SplashPanel splashPanel = new SplashPanel(JUMPWorkbench.splashImage(), title);
         SplashWindow splashWindow = new SplashWindow(splashPanel);
         //splashWindow.setVisible(true);
         
         // Create a new Workbench with WorkbenchFrame and WorkbenchContext.
-        privateStaticField(JUMPWorkbench.class, "commandLine", new CommandLine());
         TaskMonitor monitor = new DummyTaskMonitor();
         Setup setup = new JUMPConfiguration();
+        privateStaticField(JUMPWorkbench.class, "commandLine", new CommandLine());
         //JUMPWorkbench.main(args, title, setup, splashPanel, monitor);
         JUMPWorkbench workbench = new JUMPWorkbench(title, args, splashWindow, monitor);
         
@@ -127,7 +120,6 @@ public class TestTools {
      * @param parameters
      * @param retrieveFieldNamesFromPlugIn
      */
-    // TODO: Throw exception if plugin has no field "dialog".
     public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters, 
             boolean retrieveFieldNamesFromPlugIn) throws Exception {
         DialogParameters dialogParameters = new DialogParameters();
@@ -139,23 +131,45 @@ public class TestTools {
             }
             dialogParameters.putField(fieldName, fieldValue);
         }
+        // TODO: Throw specific exception if plugin has no field "dialog".
         privateField(plugin, "dialog", dialogParameters);
     }
     
-    // TODO: Wait until plugin has finished.
-    // TODO: Start UndoableEditReceiver (see AbstractPlugIn.toActionListener).
+    /**
+     * 
+     * @param plugin
+     * @param context
+     * @see com.vividsolutions.jump.workbench.plugin.AbstractPlugIn#toActionListener
+     */
     public static void executePlugIn(PlugIn plugin, WorkbenchContext context) 
             throws Exception {
         TaskMonitor taskMonitor = new DummyTaskMonitor();
         PlugInContext plugInContext = context.createPlugInContext();
-        //AbstractPlugIn.toActionListener(plugIn, context, taskMonitor);
+        // TODO: Start UndoableEditReceiver (see AbstractPlugIn.toActionListener).
+        //AbstractPlugIn.toActionListener(plugin, context, taskMonitorManager);
         if (plugin instanceof ThreadedPlugIn) {
+            // TODO: Wait until plugin has finished.
             ((ThreadedPlugIn) plugin).run(taskMonitor, plugInContext);
         }
         else {
-            String message = "Only ThreadedPlugIn is supported for now.";
+            String message = "Please use PlugIn.execute(context) directly.";
             throw new IllegalArgumentException(message);
         }
     }
+    
+    //-----------------------------------------------------------------------------------
+    // MAIN METHOD.
+    //-----------------------------------------------------------------------------------
+    
+    public static void main(String[] args) throws Exception {
+        final JUMPWorkbench workbench = TestTools.buildWorkbench(args);
+        workbench.getFrame().addWindowListener(new WindowAdapter() {
+            public void windowOpened(WindowEvent event) {
+                TestTools.openFile(new File("share/dissolve.shp"), 
+                        workbench.getContext());
+            }
+        });
+        workbench.getFrame().setVisible(true);
+    }    
     
 }

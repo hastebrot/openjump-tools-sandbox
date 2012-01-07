@@ -36,6 +36,9 @@ import com.vividsolutions.jump.workbench.JUMPWorkbench;
 import com.vividsolutions.jump.workbench.model.LayerManager;
 import com.vividsolutions.jump.workbench.plugin.PlugIn;
 
+/**
+ * @author Benjamin Gudehus
+ */
 public class UnionByAttributePlugInTest {
     
     //-----------------------------------------------------------------------------------
@@ -50,7 +53,7 @@ public class UnionByAttributePlugInTest {
     
     @BeforeClass
     public static void beforeClass() throws Exception {
-        workbench = TestTools.buildWorkbench(new String[] { "-i18n", "en" });
+        workbench = TestTools.buildWorkbench(new String[] {"-i18n", "en"});
         // TODO: Wait until frame is visible.
         // TODO: Refactor PlugIns so that a visible frame isn't needed.
         workbench.getFrame().setVisible(true);
@@ -62,14 +65,14 @@ public class UnionByAttributePlugInTest {
     }
     
     @After
-    public void after() throws Exception {
+    public void after() {
         for (JInternalFrame frame : workbench.getFrame().getInternalFrames()) {
             workbench.getFrame().removeInternalFrame(frame);
         }
     }
     
     @AfterClass
-    public static void afterClass() throws Exception {
+    public static void afterClass() {
         workbench.getFrame().setVisible(false);
         workbench.getFrame().dispose();
     }

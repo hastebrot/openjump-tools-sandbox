@@ -23,6 +23,9 @@ import java.util.HashMap;
 import com.vividsolutions.jump.workbench.model.Layer;
 import com.vividsolutions.jump.workbench.ui.MultiInputDialog;
 
+/**
+ * @author Benjamin Gudehus
+ */
 @SuppressWarnings("serial")
 public class DialogParameters extends MultiInputDialog {
     
