@@ -299,12 +299,12 @@ public class TestToolsTest {
      * without showing the user dialog use {@link TestTools#executePlugIn(PlugIn, 
      * WorkbenchContext)} after the parameters in the dialog were configured.
      * 
-     * <p>The only methods allowed to be called on the dialog within execute() are
-     * {@code getText()}, {@code getDouble()}, {@code getInteger()}, {@code getLayer()}
-     * and {@code getBoolean()}} in order to use the operations without showing the 
-     * user dialog.
+     * <p>The only methods allowed to be called on the dialog within the {@code #run}
+     * method are {@code getText()}, {@code getDouble()}, {@code getInteger()}, 
+     * {@code getLayer()} and {@code getBoolean()}} in order to use the operations 
+     * without showing the user dialog.
      * 
-     * @see TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)
+     * @see TestTools#configurePlugIn(PlugIn, java.util.Map)
      * @see TestTools#executePlugIn(PlugIn, WorkbenchContext)
      */
     public static class ExamplePlugInWithDialog extends AbstractPlugIn 
