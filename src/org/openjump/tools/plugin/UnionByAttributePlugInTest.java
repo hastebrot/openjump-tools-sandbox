@@ -1,7 +1,7 @@
 /*
  * The Unified Mapping Platform (JUMP) is an extensible, interactive GUI for 
  * visualizing and manipulating spatial features with geometry and attributes.
- * Copyright (C) 2011  The JUMP/OpenJUMP contributors
+ * Copyright (C) 2012  The JUMP/OpenJUMP contributors
  * 
  * This program is free software: you can redistribute it and/or modify it 
  * under the terms of the GNU General Public License as published by the Free 
@@ -84,7 +84,7 @@ public class UnionByAttributePlugInTest {
     @Test
     public void testAddedResultLayer() throws Exception {
         // given: "a loaded shapefile fixture"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
+        TestTools.openFile(new File("share/dissolve.jml"), workbench.getContext());
         
         // and: "plugin with dialog values"
         PlugIn plugin = new UnionByAttributePlugIn();

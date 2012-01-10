@@ -1,7 +1,7 @@
 /*
  * The Unified Mapping Platform (JUMP) is an extensible, interactive GUI for 
  * visualizing and manipulating spatial features with geometry and attributes.
- * Copyright (C) 2011  The JUMP/OpenJUMP contributors
+ * Copyright (C) 2012  The JUMP/OpenJUMP contributors
  * 
  * This program is free software: you can redistribute it and/or modify it 
  * under the terms of the GNU General Public License as published by the Free 
@@ -87,6 +87,12 @@ public final class TestTools {
         return workbench;
     }
     
+    /**
+     * Opens a geometric fixture in the task panel.
+     * 
+     * @param file File
+     * @param context Context.
+     */
     public static void openFile(File file, WorkbenchContext context) {
         OpenFilePlugIn filePlugin = new OpenFilePlugIn(context, file);
         filePlugin.actionPerformed(new ActionEvent(filePlugin, 0, ""));
@@ -99,11 +105,10 @@ public final class TestTools {
     }
     
     /**
-     * Configure PlugIn via fields in the object. Replaces the configuration of the 
-     * plugin via an user dialog in PlugIn.execute().
+     * Configures execution parameters for {@link PlugIn} using its instance fields.
      * 
-     * @param plugin
-     * @param parameters
+     * @param plugin Plugin.
+     * @param parameters Execution parameters.
      */
     public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters)
             throws Exception {
@@ -113,12 +118,11 @@ public final class TestTools {
     }
 
     /**
-     * Configure PlugIn via a dialog field. Replaces the configuration of the 
-     * plugin via an user dialog in PlugIn.execute().
+     * Configures execution parameters for {@link PlugIn} using a new user dialog.
      * 
-     * @param plugin
-     * @param parameters
-     * @param retrieveFieldNamesFromPlugIn
+     * @param plugin Plugin.
+     * @param parameters Execution parameters.
+     * @param retrieveFieldNamesFromPlugIn Retrieve {@link I18N} string names.
      */
     public static void configurePlugIn(PlugIn plugin, Map<String, Object> parameters, 
             boolean retrieveFieldNamesFromPlugIn) throws Exception {
@@ -136,9 +140,10 @@ public final class TestTools {
     }
     
     /**
+     * Executes operations of the {@link Plugin}.
      * 
-     * @param plugin
-     * @param context
+     * @param plugin Plugin.
+     * @param context Context.
      * @see com.vividsolutions.jump.workbench.plugin.AbstractPlugIn#toActionListener
      */
     public static void executePlugIn(PlugIn plugin, WorkbenchContext context) 

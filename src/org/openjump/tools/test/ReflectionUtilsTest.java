@@ -1,7 +1,7 @@
 /*
  * The Unified Mapping Platform (JUMP) is an extensible, interactive GUI for 
  * visualizing and manipulating spatial features with geometry and attributes.
- * Copyright (C) 2011  The JUMP/OpenJUMP contributors
+ * Copyright (C) 2012  The JUMP/OpenJUMP contributors
  * 
  * This program is free software: you can redistribute it and/or modify it 
  * under the terms of the GNU General Public License as published by the Free 

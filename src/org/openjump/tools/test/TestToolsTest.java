@@ -1,7 +1,7 @@
 /*
  * The Unified Mapping Platform (JUMP) is an extensible, interactive GUI for 
  * visualizing and manipulating spatial features with geometry and attributes.
- * Copyright (C) 2011  The JUMP/OpenJUMP contributors
+ * Copyright (C) 2012  The JUMP/OpenJUMP contributors
  * 
  * This program is free software: you can redistribute it and/or modify it 
  * under the terms of the GNU General Public License as published by the Free 
@@ -32,15 +32,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.vividsolutions.jump.I18N;
 import com.vividsolutions.jump.task.TaskMonitor;
 import com.vividsolutions.jump.util.Blackboard;
 import com.vividsolutions.jump.workbench.JUMPWorkbench;
+import com.vividsolutions.jump.workbench.WorkbenchContext;
 import com.vividsolutions.jump.workbench.model.LayerManager;
 import com.vividsolutions.jump.workbench.plugin.AbstractPlugIn;
 import com.vividsolutions.jump.workbench.plugin.PlugIn;
 import com.vividsolutions.jump.workbench.plugin.PlugInContext;
 import com.vividsolutions.jump.workbench.plugin.ThreadedPlugIn;
 import com.vividsolutions.jump.workbench.ui.MultiInputDialog;
+import com.vividsolutions.jump.workbench.ui.WorkbenchFrame;
 
 /**
  * @author Benjamin Gudehus
@@ -52,6 +55,8 @@ public class TestToolsTest {
     //-----------------------------------------------------------------------------------
     
     public static JUMPWorkbench workbench;
+    public static WorkbenchContext workbenchContext;
+    public static WorkbenchFrame workbenchFrame;
     
     //-----------------------------------------------------------------------------------
     // SETUP AND CLEANUP.
@@ -60,29 +65,31 @@ public class TestToolsTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         workbench = TestTools.buildWorkbench(new String[] {"-i18n", "en"});
+        workbenchContext = workbench.getContext();
+        workbenchFrame = workbench.getFrame();
         // TODO: Wait until frame is visible.
         // TODO: Refactor PlugIns so that a visible frame is not needed.
-        workbench.getFrame().setVisible(true);
+        workbenchFrame.setVisible(true);
     }
     
     @Before
     public void before() {
-        //workbench.getFrame().addTaskFrame();
+        //workbenchFrame.addTaskFrame();
     }
     
     @After
     public void after() throws Exception {
         workbench.getBlackboard().getProperties().remove("parameter1");
         workbench.getBlackboard().getProperties().remove("parameter2");
-        for (JInternalFrame frame : workbench.getFrame().getInternalFrames()) {
-            workbench.getFrame().removeInternalFrame(frame);
+        for (JInternalFrame frame : workbenchFrame.getInternalFrames()) {
+            workbenchFrame.removeInternalFrame(frame);
         }
     }
     
     @AfterClass
     public static void afterClass() throws Exception {
-        workbench.getFrame().setVisible(false);
-        workbench.getFrame().dispose();
+        workbenchFrame.setVisible(false);
+        workbenchFrame.dispose();
     }
     
     //-----------------------------------------------------------------------------------
@@ -99,7 +106,7 @@ public class TestToolsTest {
     @Test
     public void testOpenFile() {
         // when: "a shapefile is opened"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
+        TestTools.openFile(new File("share/dissolve.jml"), workbench.getContext());
         
         // then: "layer manager contains one layer"
         LayerManager layerManager = workbench.getContext().getLayerManager();
@@ -110,7 +117,7 @@ public class TestToolsTest {
     @Test
     public void testOpenFileAgain() {
         // when: "a shapefile is opened again"
-        TestTools.openFile(new File("share/dissolve.shp"), workbench.getContext());
+        TestTools.openFile(new File("share/dissolve.jml"), workbench.getContext());
         
         // then: "layer manager contains one layer"
         LayerManager layerManager = workbench.getContext().getLayerManager();
@@ -131,8 +138,6 @@ public class TestToolsTest {
         // then: "contains the field"
         assertEquals("foo", privateField(plugin, "parameter1"));
     }
-    
-    // TODO: Tests for I18N field usage: configurePlugIn(plugin, parameters, true).
     
     @Test
     public void testConfigurePlugInWithDialog() throws Exception {
@@ -199,9 +204,9 @@ public class TestToolsTest {
         // given: "a threaded plugin with parameters"
         PlugIn plugin = new ExamplePlugInWithDialog();
         HashMap<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("parameter1", "foo");
-        parameters.put("parameter2", 42);
-        TestTools.configurePlugIn(plugin, parameters, false);
+        parameters.put("PARAMETER_1", "foo");
+        parameters.put("PARAMETER_2", 42);
+        TestTools.configurePlugIn(plugin, parameters, true);
         
         // when: "the plugin is executed"
         TestTools.executePlugIn(plugin, workbench.getContext());
@@ -228,22 +233,34 @@ public class TestToolsTest {
     //-----------------------------------------------------------------------------------
     
     /**
-     * Example fixture that outlines a plugin with parameters using instance fields.
+     * Fixture that outlines a plugin which accepts parameters in instance fields.
+     * Both an user dialog and a map can be used to provide execution parameters.
      * 
-     * <p>One possible structure of a testable plugin.
+     * <p><b>Configuration:</b> {@code #execute(PlugInContext)} shows a {@link
+     * MultiInputDialog}, in which the user can set field values. When the dialog is 
+     * closed these values are assigned as execution parameters to the instance fields 
+     * {@code #parameter1} and {@code #parameter2}. The dialog is used only within
+     * this method.
      * 
-     * <p><b>Configure:</b> Has a field dialog: MultiInputDialog. PlugIn with fields 
-     * for the parameters. 
+     * <p><b>Programmatic configuration:</b> Calling {@code #execute(PlugInContext)} 
+     * can be omitted by providing the execution parameters directly to the instance 
+     * fields using {@link TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)}.
      * 
-     * <p><b>Execute:</b> Implements ThreadedPlugIn. Does not need to call execute() 
-     * in order to run. I.e. only shows a dialog.
+     * <p><b>Execution:</b> All operations take place in {@code #run(TaskMonitor, 
+     * PlugInContext)} which uses the execution parameters. To execute operations
+     * without the need of an user dialog use {@link TestTools#executePlugIn(PlugIn, 
+     * WorkbenchContext)} after the parameters were configured.
+     * 
+     * @see TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)
+     * @see TestTools#executePlugIn(PlugIn, WorkbenchContext)
      */
     public static class ExamplePlugInWithFields extends AbstractPlugIn 
             implements ThreadedPlugIn {
         private MultiInputDialog dialog;
         private String parameter1 = "";
         private int parameter2 = 0;
-        
+
+        /** Configures plugin. */
         public boolean execute(PlugInContext context) throws Exception {
             dialog = new MultiInputDialog();
             dialog.addTextField("parameter1", "", 10, null, "");
@@ -254,6 +271,7 @@ public class TestToolsTest {
             return dialog.wasOKPressed();
         }
         
+        /** Executes operations. */
         public void run(TaskMonitor monitor, PlugInContext context) throws Exception {
             Blackboard blackboard = context.getWorkbenchContext().getBlackboard();
             blackboard.put("parameter1", parameter1);
@@ -262,37 +280,70 @@ public class TestToolsTest {
     }
     
     /**
-     * Example fixture that outlines a plugin with parameters using the dialog.
+     * Fixture that outlines a plugin which accepts parameters in an user dialog.
+     * Both an user dialog and a map can be used to provide execution parameters.
      * 
-     * Only allow dialog getText(), getBoolean(), getDouble(), getInteger(), getLayer()
-     * in execute.
+     * <p><b>Configuration:</b> {@code #execute(PlugInContext)} shows a {@link
+     * MultiInputDialog}, in which the user can set field values. The dialog uses static 
+     * fields with strings from {@link I18N} to name its fields. When the dialog is 
+     * closed it contains the execution parameters to provide them for operations.
      * 
-     * I18N field names for parameters.
+     * <p><b>Programmatic configuration:</b> Calling {@code #execute(PlugInContext)} 
+     * can be omitted by providing the execution parameters directly as a new dialog
+     * instance using {@link TestTools#configurePlugIn(PlugIn, java.util.Map)}.
+     * The keys in the map are the names from the static {@code I18N} fields.
+     * 
+     * <p><b>Execution:</b> All operations take place in {@code #run(TaskMonitor, 
+     * PlugInContext)} which uses the execution parameters provided by the dialog.
+     * That means that this method has a dependency to the dialog. To execute operations
+     * without showing the user dialog use {@link TestTools#executePlugIn(PlugIn, 
+     * WorkbenchContext)} after the parameters in the dialog were configured.
+     * 
+     * <p>The only methods allowed to be called on the dialog within execute() are
+     * {@code getText()}, {@code getDouble()}, {@code getInteger()}, {@code getLayer()}
+     * and {@code getBoolean()}} in order to use the operations without showing the 
+     * user dialog.
+     * 
+     * @see TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)
+     * @see TestTools#executePlugIn(PlugIn, WorkbenchContext)
      */
     public static class ExamplePlugInWithDialog extends AbstractPlugIn 
             implements ThreadedPlugIn {
         private MultiInputDialog dialog;
+        private final static String PARAMETER_1 = 
+                I18N.get("ExamplePlugInWithDialog.param1");
+        private final static String PARAMETER_2 = 
+                I18N.get("ExamplePlugInWithDialog.param2");
         
+        /** Configures plugin. */
         public boolean execute(PlugInContext context) throws Exception {
             dialog = new MultiInputDialog();
-            dialog.addTextField("parameter1", "", 10, null, "");
-            dialog.addIntegerField("parameter2", 0, 10, "");
+            dialog.addTextField(PARAMETER_1, "", 10, null, "");
+            dialog.addIntegerField(PARAMETER_2, 0, 10, "");
             dialog.setVisible(true);
             return dialog.wasOKPressed();
         }
         
+        /** Executes operations. */
         public void run(TaskMonitor monitor, PlugInContext context) throws Exception {
             Blackboard blackboard = context.getWorkbenchContext().getBlackboard();
-            blackboard.put("parameter1", dialog.getText("parameter1"));
-            blackboard.put("parameter2", dialog.getInteger("parameter2"));
+            blackboard.put("parameter1", dialog.getText(PARAMETER_1));
+            blackboard.put("parameter2", dialog.getInteger(PARAMETER_2));
         }
     }
     
     /**
+     * Fixture that outlines a simple plugin which does not use an user dialog.
      * 
-     * Also possible with parameters using field setter or a constructor.
+     * <p><b>Configuration:</b> This fixture neither uses a dialog nor execution
+     * parameters. However it may be possible to provide parameters using field 
+     * setters or a constructor to use them in {@code #execute(PlugInContext)}.
+     * 
+     * <p><b>Execution:</b> All operations take place directly in {@code 
+     * #execute(PlugInContext)}.
      */
     public static class ExampleAbstractPlugIn extends AbstractPlugIn {
+        /** Executes operations. */
         public boolean execute(PlugInContext context) throws Exception {
             Blackboard blackboard = context.getWorkbenchContext().getBlackboard();
             blackboard.put("parameter1", "");
