@@ -244,14 +244,14 @@ public class TestToolsTest {
      * 
      * <p><b>Programmatic configuration:</b> Calling {@code #execute(PlugInContext)} 
      * can be omitted by providing the execution parameters directly to the instance 
-     * fields using {@link TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)}.
+     * fields using {@link TestTools#configurePlugIn(PlugIn, java.util.Map)}.
      * 
      * <p><b>Execution:</b> All operations take place in {@code #run(TaskMonitor, 
      * PlugInContext)} which uses the execution parameters. To execute operations
      * without the need of an user dialog use {@link TestTools#executePlugIn(PlugIn, 
      * WorkbenchContext)} after the parameters were configured.
      * 
-     * @see TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)
+     * @see TestTools#configurePlugIn(PlugIn, java.util.Map)
      * @see TestTools#executePlugIn(PlugIn, WorkbenchContext)
      */
     public static class ExamplePlugInWithFields extends AbstractPlugIn 
@@ -290,7 +290,7 @@ public class TestToolsTest {
      * 
      * <p><b>Programmatic configuration:</b> Calling {@code #execute(PlugInContext)} 
      * can be omitted by providing the execution parameters directly as a new dialog
-     * instance using {@link TestTools#configurePlugIn(PlugIn, java.util.Map)}.
+     * instance using {@link TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)}.
      * The keys in the map are the names from the static {@code I18N} fields.
      * 
      * <p><b>Execution:</b> All operations take place in {@code #run(TaskMonitor, 
@@ -301,10 +301,10 @@ public class TestToolsTest {
      * 
      * <p>The only methods allowed to be called on the dialog within the {@code #run}
      * method are {@code getText()}, {@code getDouble()}, {@code getInteger()}, 
-     * {@code getLayer()} and {@code getBoolean()}} in order to use the operations 
+     * {@code getLayer()} and {@code getBoolean()} in order to use the operations 
      * without showing the user dialog.
      * 
-     * @see TestTools#configurePlugIn(PlugIn, java.util.Map)
+     * @see TestTools#configurePlugIn(PlugIn, java.util.Map, boolean)
      * @see TestTools#executePlugIn(PlugIn, WorkbenchContext)
      */
     public static class ExamplePlugInWithDialog extends AbstractPlugIn 
